@@ -1,0 +1,69 @@
+version: "3.8"
+services:
+  database:
+    build:
+      context:
+        ./database
+      args:
+        - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+    healthcheck:
+      test: pg_isready
+      interval: 10s
+      timeout: 5s
+      retries: 25
+  rabbitmq:
+    build:
+      context:
+        ./rabbitmq
+      args:
+        - RABBITMQ_DEFAULT_PASS=$RABBITMQ_DEFAULT_PASS
+    environment:
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management load_definitions "/etc/rabbitmq/definitions.json"
+    hostname: rabbitmq
+# Disabled for security purposes
+#    ports:
+#      - 15672:15672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 15s
+      timeout: 30s
+      retries: 10
+  frontend:
+    build:
+      context:
+        ./frontend
+      args:
+        - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+        - RABBITMQ_DEFAULT_PASS=$RABBITMQ_DEFAULT_PASS
+    restart: on-failure
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    links:
+      - rabbitmq
+      - database
+    ports:
+      - 80:80
+  backend_services:
+    build:
+      context:
+        ./backend_services
+      args:
+        - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+        - RABBITMQ_DEFAULT_PASS=$RABBITMQ_DEFAULT_PASS
+        - TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID
+        - TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
+        - TWILIO_PHONE_NUMBER=$TWILIO_PHONE_NUMBER
+        - USERS_PHONE_NUMBER=$USERS_PHONE_NUMBER
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    links:
+      - rabbitmq
+      - database
+    ports:
+      - 8090:8090

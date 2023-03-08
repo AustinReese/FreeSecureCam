@@ -1,0 +1,54 @@
+{
+   "rabbit_version":"3.8.9",
+   "rabbitmq_version":"3.8.9",
+   "product_name":"RabbitMQ",
+   "product_version":"3.8.9",
+   "users":[
+   ],
+   "vhosts":[
+      {
+         "name":"/"
+      }
+   ],
+   "queues":[
+      {
+         "name":"alert_messages",
+         "vhost":"/",
+         "durable":true,
+         "auto_delete":false,
+         "arguments":{
+            "x-expires":3600000,
+            "x-message-ttl":15000,
+            "x-queue-type":"classic"
+         }
+      },
+      {
+         "name":"motion_processing_images",
+         "vhost":"/",
+         "durable":true,
+         "auto_delete":false,
+         "arguments":{
+            "x-expires":3600000,
+            "x-message-ttl":15000,
+            "x-queue-type":"classic"
+         }
+      },
+      {
+         "name":"livestream_images",
+         "vhost":"/",
+         "durable":true,
+         "auto_delete":false,
+         "arguments":{
+            "x-expires":3600000,
+            "x-message-ttl":5000,
+            "x-queue-type":"classic"
+         }
+      }
+   ],
+   "exchanges":[
+
+   ],
+   "bindings":[
+
+   ]
+}

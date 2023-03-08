@@ -9,12 +9,12 @@
 WiFiClient client;
 HTTPClient http;
 
-const char* ssid = "orlando";
-const char* password = "k*3l)Viu3!sU";
+const char* ssid = <YOUR_NETWORK_SSID>;
+const char* password = <YOUR_NETWORK_PASSWORD>;
 const uint16_t apiPort = 80;
 const uint16_t socketPort = 8090;
 
-const char * host = "192.168.50.9";
+const char * host = <YOUR_SERVERS_IP_ADDRESS>;
 
 const bool printReceivedData = true;
 bool connectedToServer = false;

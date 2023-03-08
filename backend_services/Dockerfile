@@ -1,4 +1,4 @@
-FROM python:latest
+FROM balenalib/raspberry-pi-debian-python:latest
 
 WORKDIR /opt/app/
 

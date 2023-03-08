@@ -1,4 +1,5 @@
-FROM balenalib/raspberry-pi-debian-python:latest
+FROM arm32v7/python:3.10-bullseye
+
 RUN apt-get update -y
 
 WORKDIR /opt/app/

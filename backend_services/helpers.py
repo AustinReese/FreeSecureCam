@@ -15,3 +15,11 @@ def get_db_host():
         return "localhost"
     else:
         raise ValueError(f"Unknown environment {getenv('ENVIRONMENT')}")
+
+def get_ip_to_bind(socket):
+    if getenv("ENVIRONMENT").lower() == "production":
+        return socket.gethostname()
+    elif getenv("ENVIRONMENT").lower() == "development":
+        return "0.0.0.0"
+    else:
+        raise ValueError(f"Unknown environment {getenv('ENVIRONMENT')}")

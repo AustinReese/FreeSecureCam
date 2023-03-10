@@ -63,7 +63,7 @@ def initialize_SocketLogger():
     )
 
     with SocketLoggerLock:
-        SocketLogger = logging.getSocketLogger(__name__)
+        SocketLogger = logging.getLogger(__name__)
         SocketLogger.setLevel(logging.INFO)
         #SocketLogger.addHandler(logging.StreamHandler(sys.stdout))
 

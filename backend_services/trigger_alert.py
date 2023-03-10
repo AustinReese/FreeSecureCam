@@ -68,7 +68,7 @@ def initialize_AlertLogger():
         ]
     )
     with AlertLoggerLock:
-        AlertLogger = logging.getAlertLogger(__name__)
+        AlertLogger = logging.getLogger(__name__)
         AlertLogger.setLevel(logging.INFO)
 
 

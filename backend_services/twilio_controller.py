@@ -76,7 +76,7 @@ def initialize_TwilioLogger(curs):
         ]
     )
     with TwilioLoggerLock:
-        TwilioLogger = logging.getTwilioLogger(__name__)
+        TwilioLogger = logging.getLogger(__name__)
         TwilioLogger.setLevel(logging.INFO)
 
 def check_incoming_messages(twilio_client, last_replied_to_message_sid, curs, conn):

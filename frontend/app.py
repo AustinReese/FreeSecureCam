@@ -105,7 +105,7 @@ def initialize_AppLogger():
         format='%(asctime)s %(levelname)-8s %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')
     with AppLoggerLock:
-        AppLogger = logging.getAppLogger(__name__)
+        AppLogger = logging.getLogger(__name__)
         AppLogger.setLevel(logging.INFO)
 
 if __name__ == "__main__":

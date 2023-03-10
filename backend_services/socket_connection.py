@@ -17,8 +17,8 @@ ImageSeperator = b"newblock"
 Channel = None
 ActiveConnection = False
 PublishLock = threading.Lock()
-Logger = None
-LoggerLock = threading.Lock()
+SocketLogger = None
+SocketLoggerLock = threading.Lock()
 
 class KeepAliveThread(threading.Thread):
     def __init__(self):
@@ -41,11 +41,11 @@ class KeepAliveThread(threading.Thread):
                                               body='keep_alive')
                 sleep(30)
         except Exception as e:
-            with LoggerLock:
-                Logger.info(f"socket_connection: Error in KeepAliveThread.run: {e}")
+            with SocketLoggerLock:
+                SocketLogger.info(f"socket_connection: Error in KeepAliveThread.run: {e}")
 
-def initialize_logger():
-    global Logger
+def initialize_SocketLogger():
+    global SocketLogger
     db_host = get_db_host()
 
     conn = psycopg2.connect(host=db_host, port=5432, database=getenv('DB_NAME'),  user=getenv('POSTGRES_USER'),
@@ -62,24 +62,24 @@ def initialize_logger():
         ]
     )
 
-    with LoggerLock:
-        Logger = logging.getLogger(__name__)
-        Logger.setLevel(logging.INFO)
-        #Logger.addHandler(logging.StreamHandler(sys.stdout))
+    with SocketLoggerLock:
+        SocketLogger = logging.getSocketLogger(__name__)
+        SocketLogger.setLevel(logging.INFO)
+        #SocketLogger.addHandler(logging.StreamHandler(sys.stdout))
 
 def await_connection(serv):
-    global Logger
+    global SocketLogger
     try:
-        with LoggerLock:
-            Logger.info(f"socket_connection: Awaiting connection on {serv.getsockname()[0]}:{serv.getsockname()[1]}")
+        with SocketLoggerLock:
+            SocketLogger.info(f"socket_connection: Awaiting connection on {serv.getsockname()[0]}:{serv.getsockname()[1]}")
         conn, addr = serv.accept()
         connected_device = f"{addr[0]}:{addr[1]}"
-        with LoggerLock:
-            Logger.info(f"socket_connection: {connected_device} Connected")
+        with SocketLoggerLock:
+            SocketLogger.info(f"socket_connection: {connected_device} Connected")
         return conn, addr, connected_device
     except Exception as e:
-        with LoggerLock:
-            Logger.info(f"socket_connection: Error in await_connection: {e}")
+        with SocketLoggerLock:
+            SocketLogger.info(f"socket_connection: Error in await_connection: {e}")
 
 def fetch_data():
     global ActiveConnection
@@ -111,7 +111,7 @@ def fetch_data():
                     for i in range(images_in_buffer - 1):
                         image_bytes = buffer[:buffer.find(ImageSeperator)]
                         if image_bytes[:4] == b'temp':
-                            Logger.info(f"Camera CPU temperature: {image_bytes[4:image_bytes.find(b'$')].decode()} F")
+                            SocketLogger.info(f"Camera CPU temperature: {image_bytes[4:image_bytes.find(b'$')].decode()} F")
                             image_bytes = image_bytes[image_bytes.find(b'$') + 1:]
                         nparr = np.frombuffer(image_bytes, np.uint8)
                         cv2_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -129,16 +129,16 @@ def fetch_data():
                         buffer = buffer[buffer.find(ImageSeperator) + len(ImageSeperator):]
                         image_count += 1
                 elif timer() - loop_start >= 10:
-                    with LoggerLock:
-                        Logger.info(f"socket_connection: Lost connection to {connected_device}")
+                    with SocketLoggerLock:
+                        SocketLogger.info(f"socket_connection: Lost connection to {connected_device}")
                     active_connection = False
                     conn.close()
                     serv.close()
                     continue
 
         except Exception as e:
-            with LoggerLock:
-                Logger.info(f"socket_connection: Error in fetch_data: {e}")
+            with SocketLoggerLock:
+                SocketLogger.info(f"socket_connection: Error in fetch_data: {e}")
             conn.close()
             serv.close()
             sleep(5)
@@ -146,7 +146,7 @@ def fetch_data():
 
 def run_socket_connection():
     global Channel
-    initialize_logger()
+    initialize_SocketLogger()
 
     while True:
         try:
@@ -164,6 +164,6 @@ def run_socket_connection():
             fetch_data()
 
         except Exception as e:
-            with LoggerLock:
-                Logger.info(f"socket_connection: Error in main: {e}")
+            with SocketLoggerLock:
+                SocketLogger.info(f"socket_connection: Error in main: {e}")
             sleep(5)

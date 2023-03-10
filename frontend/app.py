@@ -21,8 +21,8 @@ Conn = psycopg2.connect(host=DBHost, port=5432, database=getenv('DB_NAME'),  use
 Cur = Conn.cursor()
 DBLock = threading.Lock()
 
-Logger = None
-LoggerLock = threading.Lock()
+AppLogger = None
+AppLoggerLock = threading.Lock()
 
 CurrentImage = ""
 ImageLock = threading.Lock()
@@ -36,8 +36,8 @@ def watchfuleye_is_active():
         try:
             Cur.execute("SELECT value FROM configuration WHERE name = 'watchfuleye_is_active'")
         except Exception as e:
-            with LoggerLock:
-                Logger.info(f"Error in app.watchfuleye_is_active: {e}")
+            with AppLoggerLock:
+                AppLogger.info(f"Error in app.watchfuleye_is_active: {e}")
             Conn.close()
             Conn = psycopg2.connect(host=DBHost, port=5432, database=getenv('DB_NAME'), user=getenv('POSTGRES_USER'),
                                     password=getenv('POSTGRES_PASSWORD'))
@@ -95,8 +95,8 @@ def get_current_image():
         # Share ImageLock time with ImageUpdateThread.update_current_image
         sleep(.01)
 
-def initialize_logger():
-    global Cur, Logger, LoggerLock
+def initialize_AppLogger():
+    global Cur, AppLogger, AppLoggerLock
     Cur.execute("SELECT value FROM configuration WHERE name = 'log_path'")
     log_path = Cur.fetchall()[0][0]
     for handler in logging.root.handlers[:]:
@@ -104,12 +104,12 @@ def initialize_logger():
     logging.basicConfig(filename=f'{log_path}trigger_alert.log',
         format='%(asctime)s %(levelname)-8s %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')
-    with LoggerLock:
-        Logger = logging.getLogger(__name__)
-        Logger.setLevel(logging.INFO)
+    with AppLoggerLock:
+        AppLogger = logging.getAppLogger(__name__)
+        AppLogger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
-    initialize_logger()
+    initialize_AppLogger()
     image_update_thread = ImageUpdateThread()
     image_update_thread.start()
     app.run(host='0.0.0.0', port=80)

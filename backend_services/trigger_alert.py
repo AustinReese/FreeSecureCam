@@ -10,8 +10,8 @@ from helpers import get_db_host, get_rabbitmq_host
 
 ImageArray = []
 TwilioClientLock = threading.Lock()
-Logger = None
-LoggerLock = threading.Lock()
+AlertLogger = None
+AlertLoggerLock = threading.Lock()
 
 class ImageUpdateThread(threading.Thread):
     def __init__(self):
@@ -31,8 +31,8 @@ class ImageUpdateThread(threading.Thread):
             self.channel.start_consuming()
 
         except Exception as e:
-            with LoggerLock:
-                Logger.info(f"trigger_alert: Error in ImageUpdateThread.run: {e}")
+            with AlertLoggerLock:
+                AlertLogger.info(f"trigger_alert: Error in ImageUpdateThread.run: {e}")
 
     def update_current_image(self, ch, method, properties, body):
         global ImageArray
@@ -47,11 +47,11 @@ class ImageUpdateThread(threading.Thread):
                                           body="keep_alive")
 
         except Exception as e:
-            with LoggerLock:
-                Logger.info(f"trigger_alert: Error in ImageUpdateThread.update_current_image: {e}")
+            with AlertLoggerLock:
+                AlertLogger.info(f"trigger_alert: Error in ImageUpdateThread.update_current_image: {e}")
 
-def initialize_logger():
-    global Logger
+def initialize_AlertLogger():
+    global AlertLogger
     db_host = get_db_host()
     conn = psycopg2.connect(host=db_host, port=5432, database=getenv('DB_NAME'),  user=getenv('POSTGRES_USER'),
                             password=getenv('POSTGRES_PASSWORD'))
@@ -67,9 +67,9 @@ def initialize_logger():
             logging.StreamHandler()
         ]
     )
-    with LoggerLock:
-        Logger = logging.getLogger(__name__)
-        Logger.setLevel(logging.INFO)
+    with AlertLoggerLock:
+        AlertLogger = logging.getAlertLogger(__name__)
+        AlertLogger.setLevel(logging.INFO)
 
 
 def create_image_from_bytes(image_bytes):
@@ -109,8 +109,8 @@ def check_images_for_motion(connection, channel):
                     channel.basic_publish(exchange='',
                                           routing_key='alert_messages',
                                           body=max_changed_pixels_image_bytes)
-                    with LoggerLock:
-                        Logger.info("trigger_alert: Motion detected, sending alert message")
+                    with AlertLoggerLock:
+                        AlertLogger.info("trigger_alert: Motion detected, sending alert message")
                 else:
                     channel.basic_publish(exchange='',
                                           routing_key='alert_messages',
@@ -121,12 +121,12 @@ def check_images_for_motion(connection, channel):
                                       body="keep_alive")
 
     except Exception as e:
-        with LoggerLock:
-            Logger.info(f"trigger_alert: Error in check_images_for_motion: {e}")
+        with AlertLoggerLock:
+            AlertLogger.info(f"trigger_alert: Error in check_images_for_motion: {e}")
 
 
 def run_trigger_alert():
-    initialize_logger()
+    initialize_AlertLogger()
     try:
         image_update_thread = ImageUpdateThread()
         image_update_thread.start()
@@ -140,5 +140,5 @@ def run_trigger_alert():
             sleep(.5)
 
     except Exception as e:
-        with LoggerLock:
-            Logger.info(f"trigger_alert: Error in main: {e}")
+        with AlertLoggerLock:
+            AlertLogger.info(f"trigger_alert: Error in main: {e}")

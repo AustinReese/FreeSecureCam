@@ -157,7 +157,7 @@ def run_twilio_controller():
     curs = conn.cursor()
     initialize_logger(curs)
 
-    if TwilioAccountSID != "":
+    if TwilioAccountSID != "" and TwilioAccountSID != None:
         twilio_client = Client(TwilioAccountSID, TwilioAuthToken)
     else:
         Logger.info("twilio_controller: Twilio integration disabled, exiting")
